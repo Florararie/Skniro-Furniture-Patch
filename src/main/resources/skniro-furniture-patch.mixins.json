@@ -1,0 +1,13 @@
+{
+	"required": true,
+	"package": "eu.pb4.sknirofurniturepatch.mixin",
+	"compatibilityLevel": "JAVA_25",
+	"mixins": [
+		"LivingEntityMixin",
+		"ServerLevelMixin",
+		"ServerPlayerMixin"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	}
+}
