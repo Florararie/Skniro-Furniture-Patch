@@ -41,7 +41,7 @@ public class FurnitureBlockModel extends ElementHolder {
         }
     }
 
-    private BlockState blockState() {
+    protected BlockState blockState() {
         return this.getAttachment() instanceof BlockAwareAttachment attachment
                 ? attachment.getBlockState()
                 : Blocks.AIR.defaultBlockState();

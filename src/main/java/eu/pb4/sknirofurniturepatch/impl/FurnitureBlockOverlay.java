@@ -27,7 +27,16 @@ public final class FurnitureBlockOverlay implements PolymerBlock, BlockWithEleme
 
     @Override
     public @Nullable ElementHolder createElementHolder(ServerLevel world, BlockPos pos, BlockState initialState) {
-        return new FurnitureBlockModel(initialState);
+        return new FurnitureContainerModel(world, pos, initialState);
+    }
+
+    @Override
+    public boolean tickElementHolder(ServerLevel world, BlockPos pos, BlockState initialState) {
+        // Only plates, sinks, ovens and cabinets have anything to keep in sync with their inventory.
+        // This runs from the chunk constructor while a chunk loads, where asking the level for its
+        // block entity would wait for that same chunk to finish loading, so it is decided from the
+        // block state alone.
+        return FurnitureContainerModel.holdsItems(initialState);
     }
 
     @Override

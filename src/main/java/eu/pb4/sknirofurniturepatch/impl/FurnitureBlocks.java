@@ -23,6 +23,8 @@ public final class FurnitureBlocks {
     public static void setup() {
         // Collision stand-ins have to exist before the first block state is mapped to one.
         FurnitureShapes.setup();
+        // Which blocks draw their contents has to be known before the first chunk is loaded.
+        FurnitureContainerModel.setup();
 
         int blocks = 0;
         for (var block : BuiltInRegistries.BLOCK) {
@@ -77,8 +79,18 @@ public final class FurnitureBlocks {
             seats++;
         }
 
+        int containers = 0;
+        for (var type : BuiltInRegistries.BLOCK_ENTITY_TYPE) {
+            var id = BuiltInRegistries.BLOCK_ENTITY_TYPE.getKey(type);
+            if (id.getNamespace().equals(SkniroFurniturePatch.TARGET_MOD_ID)
+                    && FurnitureContainerModel.handles(type)) {
+                containers++;
+            }
+        }
+
         SkniroFurniturePatch.LOGGER.info("Virtualised {} furniture blocks, {} block entity types, {} seats and {} menus.",
                 blocks, blockEntities, seats, menus);
+        SkniroFurniturePatch.LOGGER.info("Draws the contents of {} furniture container types.", containers);
     }
 
     private static <T extends Entity> void registerSeat(EntityType<T> type) {
