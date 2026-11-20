@@ -6,9 +6,16 @@ import eu.pb4.polymer.core.api.entity.PolymerEntityUtils;
 import eu.pb4.polymer.core.api.other.PolymerMenuUtils;
 import eu.pb4.polymer.virtualentity.api.BlockWithElementHolder;
 import eu.pb4.sknirofurniturepatch.SkniroFurniturePatch;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Puts a Polymer overlay on every block Skniro's Furniture adds.
@@ -17,6 +24,9 @@ import net.minecraft.world.entity.EntityType;
  * ships later is picked up without touching this patch.
  */
 public final class FurnitureBlocks {
+    private static final Set<EntityType<?>> SEATS = new HashSet<>();
+    private static final List<Entity> NEW_SEATS = new ArrayList<>();
+
     private FurnitureBlocks() {
     }
 
@@ -75,6 +85,7 @@ public final class FurnitureBlocks {
                 continue;
             }
 
+            SEATS.add(type);
             registerSeat(type);
             seats++;
         }
@@ -87,6 +98,29 @@ public final class FurnitureBlocks {
                 containers++;
             }
         }
+
+        // The mod spawns a seat and then mounts the player on it. A sneaking player refuses to
+        // mount, so that attempt leaves the invisible seat behind with nothing riding it - and
+        // breaking the furniture afterwards does not remove it either. Any seat that is still
+        // empty once its spawn tick ends is such a leftover, so drop it.
+        ServerEntityEvents.ENTITY_LOAD.register((entity, world) -> {
+            if (SEATS.contains(entity.getType())) {
+                NEW_SEATS.add(entity);
+            }
+        });
+        ServerTickEvents.END_SERVER_TICK.register(server -> {
+            if (NEW_SEATS.isEmpty()) {
+                return;
+            }
+
+            var pending = List.copyOf(NEW_SEATS);
+            NEW_SEATS.clear();
+            for (var seat : pending) {
+                if (!seat.isRemoved() && seat.getPassengers().isEmpty()) {
+                    seat.discard();
+                }
+            }
+        });
 
         SkniroFurniturePatch.LOGGER.info("Virtualised {} furniture blocks, {} block entity types, {} seats and {} menus.",
                 blocks, blockEntities, seats, menus);
