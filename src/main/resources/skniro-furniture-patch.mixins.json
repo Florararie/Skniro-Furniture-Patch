@@ -5,6 +5,7 @@
 	"mixins": [
 		"LivingEntityMixin",
 		"ServerLevelMixin",
+		"ServerPlayerGameModeMixin",
 		"ServerPlayerMixin"
 	],
 	"injectors": {
